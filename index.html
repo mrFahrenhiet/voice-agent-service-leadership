@@ -1033,6 +1033,43 @@
       <div class="slide-header">
         <div>
           <p class="eyebrow">Slide 8</p>
+          <h2>Reusable Studio Page Pattern</h2>
+        </div>
+        <div class="slide-no">Adoption</div>
+      </div>
+      <p class="lead">Other teams can create their own browser voice sessions from Studio Pages by adding a small server-side session route that wraps the public browser-session API, then connecting the page UI to LiveKit with the returned credentials.</p>
+      <div class="sequence">
+        <div class="step"><strong>Configure the agent in Japan AI client.</strong> Enable <code>chat_pipeline</code> voice on the agent, choose TTS/STT/language/eagerness settings, and attach tools through the normal agent configuration.</div>
+        <div class="step"><strong>Add a Studio Page server route.</strong> Keep <code>JAPAN_AI_VOICE_API_KEY</code> server-side. The browser should call the page route, not the public API directly.</div>
+        <div class="step"><strong>Create a browser session.</strong> The route calls <code>POST /voice-agent/v1/browser-sessions</code> with <code>agentId</code>, optional <code>prompt</code>, <code>userId</code>, <code>language</code>, <code>projectId</code>, <code>artifactIds</code>, and <code>participantName</code>.</div>
+        <div class="step"><strong>Connect the browser to LiveKit.</strong> The page receives <code>sessionId</code>, <code>token</code>, <code>livekitUrl</code>, <code>roomName</code>, and <code>dispatchId</code>, then joins the room with the LiveKit client.</div>
+        <div class="step"><strong>Handle voice events.</strong> Use <code>lk.chat</code> for text input, <code>lk.transcription</code> for transcript segments, <code>lk.agent.state</code> for turn UI, and <code>jai.agent_events</code> for text/tool/error payloads.</div>
+        <div class="step"><strong>Finalize the session.</strong> Call <code>DELETE /voice-agent/v1/browser-sessions/:id</code> from the server route on end, pagehide, timeout, or failure cleanup.</div>
+      </div>
+      <div class="two-col" style="margin-top: 18px;">
+        <div class="panel">
+          <h3>What teams own</h3>
+          <ul>
+            <li>Page authorization and tenant/session guardrails.</li>
+            <li>Custom instruction source, such as page context, workflow state, or uploaded prompt content.</li>
+            <li>Browser UI for microphone state, transcript rendering, tool events, and completion behavior.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>What the platform owns</h3>
+          <ul>
+            <li>LiveKit room creation, agent dispatch, token issuance, active-session limits, and cleanup.</li>
+            <li>Room metadata handoff into <code>voice_service</code> and <code>agent_service</code>.</li>
+            <li>Forwarding configured agent tools through <code>agent_tools</code> for the voice runner.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 9</p>
           <h2>Chat-Pipeline Dispatch Metadata</h2>
         </div>
         <div class="slide-no">LiveKit</div>
@@ -1119,7 +1156,7 @@
     <section class="slide">
       <div class="slide-header">
         <div>
-          <p class="eyebrow">Slide 9</p>
+          <p class="eyebrow">Slide 10</p>
           <h2>Schema and UI Enablement</h2>
         </div>
         <div class="slide-no">Config</div>
@@ -1151,7 +1188,7 @@
     <section class="slide">
       <div class="slide-header">
         <div>
-          <p class="eyebrow">Slide 10</p>
+          <p class="eyebrow">Slide 11</p>
           <h2>HR Interview Integration</h2>
         </div>
         <div class="slide-no">Prompt and session</div>
@@ -1180,7 +1217,7 @@
     <section class="slide">
       <div class="slide-header">
         <div>
-          <p class="eyebrow">Slide 11</p>
+          <p class="eyebrow">Slide 12</p>
           <h2>HR LiveKit Client Behavior</h2>
         </div>
         <div class="slide-no">Browser</div>
@@ -1249,7 +1286,7 @@
     <section class="slide">
       <div class="slide-header">
         <div>
-          <p class="eyebrow">Slide 12</p>
+          <p class="eyebrow">Slide 13</p>
           <h2>Tool Handling, PRs, and Future Work</h2>
         </div>
         <div class="slide-no">Status</div>
