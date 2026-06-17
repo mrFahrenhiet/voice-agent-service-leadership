@@ -1,0 +1,1259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Voice Agent Service: Browser Sessions and Chat-Pipeline Agents</title>
+  <style>
+    :root {
+      --ink: #18202a;
+      --muted: #5d6775;
+      --paper: #f7f5ef;
+      --surface: #ffffff;
+      --line: #d8d3c8;
+      --teal: #14756f;
+      --amber: #b46b16;
+      --red: #b13b3f;
+      --green: #4f7d35;
+      --blue: #2f5f9b;
+      --shadow: 0 14px 36px rgba(31, 34, 39, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    code {
+      background: #efebe1;
+      border: 1px solid #ded8ca;
+      border-radius: 4px;
+      color: #27231e;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      padding: 0.06rem 0.26rem;
+      white-space: nowrap;
+    }
+
+    .deck {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .slide {
+      min-height: min(760px, calc(100vh - 48px));
+      margin: 0 0 28px;
+      padding: clamp(28px, 5vw, 56px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      page-break-after: always;
+      scroll-margin-top: 16px;
+    }
+
+    .slide-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.08;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(2.2rem, 6vw, 4.8rem);
+    }
+
+    h2 {
+      font-size: clamp(1.9rem, 4vw, 3rem);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+
+    li {
+      margin: 0 0 8px;
+    }
+
+    .slide-no {
+      flex: 0 0 auto;
+      min-width: 64px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-align: right;
+    }
+
+    .lead {
+      max-width: 920px;
+      color: #303741;
+      font-size: clamp(1.1rem, 2vw, 1.42rem);
+      line-height: 1.42;
+    }
+
+    .hero-grid,
+    .two-col,
+    .three-col,
+    .four-col {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid > *,
+    .two-col > *,
+    .three-col > *,
+    .four-col > * {
+      min-width: 0;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+      align-items: end;
+      margin-top: 48px;
+    }
+
+    .two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .three-col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .four-col {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .panel {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: #fffdf8;
+    }
+
+    .panel strong,
+    .fact strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .fact-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .fact {
+      border-left: 5px solid var(--teal);
+      background: #f1f6f4;
+      padding: 14px 16px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .fact:nth-child(2) {
+      border-left-color: var(--amber);
+      background: #fbf3e7;
+    }
+
+    .fact:nth-child(3) {
+      border-left-color: var(--blue);
+      background: #edf2fb;
+    }
+
+    .tag {
+      display: inline-block;
+      margin: 0 6px 8px 0;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 9px;
+      background: #fbfaf6;
+      color: #323b45;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .callout {
+      border-left: 6px solid var(--amber);
+      background: #fff8eb;
+      padding: 16px 18px;
+      margin-top: 20px;
+    }
+
+    .callout.teal {
+      border-left-color: var(--teal);
+      background: #eef7f5;
+    }
+
+    .callout.red {
+      border-left-color: var(--red);
+      background: #fff0f0;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .flow-box {
+      position: relative;
+      min-height: 120px;
+      border: 2px solid #c9c3b7;
+      border-radius: 8px;
+      padding: 16px;
+      background: #fffdf8;
+    }
+
+    .flow-box::after {
+      content: "->";
+      position: absolute;
+      right: -22px;
+      top: 46px;
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .flow-box:nth-child(4n)::after,
+    .flow-box:last-child::after {
+      content: "";
+    }
+
+    .flow-title {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    .flow-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .swimlane {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      border: 1px solid var(--line);
+      margin: 20px 0;
+    }
+
+    .lane-label,
+    .lane-body {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .lane-label {
+      background: #f1eee7;
+      color: #3d434c;
+      font-weight: 700;
+    }
+
+    .lane-body {
+      background: #fffdf8;
+    }
+
+    .lane-label:last-of-type,
+    .lane-body:last-of-type {
+      border-bottom: 0;
+    }
+
+    .diagram-shell {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+      margin: 18px 0;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .diagram-svg {
+      display: block;
+      width: 100%;
+      min-width: 940px;
+      height: auto;
+    }
+
+    .diagram-svg text {
+      fill: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .diagram-svg .small {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .diagram-svg .label {
+      fill: #313944;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .diagram-svg .title {
+      fill: #16212d;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .diagram-svg .cluster-label {
+      fill: #394351;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .diagram-svg .node {
+      fill: #ffffff;
+      stroke: #c7c0b3;
+      stroke-width: 1.4;
+    }
+
+    .diagram-svg .cluster {
+      fill: #fbf8f0;
+      stroke: #d8d3c8;
+      stroke-width: 1.4;
+    }
+
+    .diagram-svg .api {
+      fill: #eef7f5;
+      stroke: var(--teal);
+    }
+
+    .diagram-svg .media {
+      fill: #edf2fb;
+      stroke: var(--blue);
+    }
+
+    .diagram-svg .agent {
+      fill: #fff4e3;
+      stroke: var(--amber);
+    }
+
+    .diagram-svg .store {
+      fill: #f5f0e7;
+      stroke: #958b7c;
+    }
+
+    .diagram-svg .event {
+      fill: #f7f1fb;
+      stroke: #73548d;
+    }
+
+    .diagram-svg .edge {
+      fill: none;
+      stroke: #6b7280;
+      stroke-width: 1.7;
+      marker-end: url(#arrow);
+    }
+
+    .diagram-svg .edge-strong {
+      fill: none;
+      stroke: var(--teal);
+      stroke-width: 2.3;
+      marker-end: url(#arrow-teal);
+    }
+
+    .diagram-svg .edge-media {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 2.1;
+      marker-end: url(#arrow-blue);
+    }
+
+    .diagram-svg .edge-event {
+      fill: none;
+      stroke: #73548d;
+      stroke-width: 2.1;
+      marker-end: url(#arrow-purple);
+    }
+
+    .diagram-svg .edge-dashed {
+      fill: none;
+      stroke: #7b8190;
+      stroke-width: 1.6;
+      stroke-dasharray: 5 5;
+      marker-end: url(#arrow);
+    }
+
+    .diagram-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 16px;
+      height: 4px;
+      border-radius: 999px;
+      background: #6b7280;
+    }
+
+    .legend-swatch.control {
+      background: var(--teal);
+    }
+
+    .legend-swatch.media {
+      background: var(--blue);
+    }
+
+    .legend-swatch.event {
+      background: #73548d;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 0.93rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #efe9dc;
+      color: #252a31;
+      font-weight: 700;
+    }
+
+    td {
+      background: #fffdf8;
+    }
+
+    .compact-table td:first-child {
+      width: 34%;
+      font-weight: 700;
+    }
+
+    .sequence {
+      counter-reset: step;
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .step {
+      position: relative;
+      padding: 13px 15px 13px 54px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 14px;
+      top: 13px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #ffffff;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 26px;
+      text-align: center;
+    }
+
+    .evidence {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-note {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .link-break {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    @media (max-width: 860px) {
+      .deck {
+        width: min(100% - 18px, 720px);
+        padding-top: 10px;
+      }
+
+      .slide {
+        min-height: auto;
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+
+      .slide-header,
+      .hero-grid,
+      .two-col,
+      .three-col,
+      .four-col,
+      .fact-row,
+      .architecture,
+      .swimlane {
+        grid-template-columns: 1fr;
+      }
+
+      .slide-header {
+        display: block;
+      }
+
+      .slide-no {
+        margin-top: 12px;
+        text-align: left;
+      }
+
+      .flow-box::after {
+        content: "v";
+        right: auto;
+        left: 16px;
+        top: auto;
+        bottom: -22px;
+      }
+
+      .flow-box:last-child::after {
+        content: "";
+      }
+
+      code {
+        white-space: normal;
+        word-break: break-word;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .deck {
+        width: 100%;
+        padding: 0;
+      }
+
+      .slide {
+        min-height: 100vh;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+      }
+
+      a {
+        color: #000000;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"></path>
+      </marker>
+      <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#14756f"></path>
+      </marker>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f5f9b"></path>
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#73548d"></path>
+      </marker>
+    </defs>
+  </svg>
+  <main class="deck">
+    <section class="slide">
+      <p class="eyebrow">Voice Agent Service</p>
+      <h1>Browser Sessions and Chat-Pipeline Voice Agents</h1>
+      <div class="hero-grid">
+        <div>
+          <p class="lead">Browser clients can now join LiveKit rooms backed by JAI chat-pipeline voice agents. The path reuses the existing <code>agent_service</code> runner, agent tools, prompt context, and event stream instead of maintaining a separate voice-only agent stack.</p>
+          <div class="fact-row">
+            <div class="fact"><strong>Scope</strong>Voice service, public API, admin/client UI, and HR interview page.</div>
+            <div class="fact"><strong>Status</strong>Core integration exists behind active feature branches and confirmed PRs.</div>
+            <div class="fact"><strong>Demo UI</strong><a class="link-break" href="https://shreyansh.dev.app.japan-ai.co.jp">Personal env</a></div>
+            <div class="fact"><strong>AI Interviewer demo</strong><a class="link-break" href="https://page-rendering-service-prod-1082764892911.asia-northeast1.run.app/app/562bd4ba-a3a3-4e3f-89d0-c24900429076/b0e1d88c-ea16-423b-b66e-92eb07c24c3a/9e893317-b8ac-4d62-85cf-71c41a339515/ai-interviewer?token=ab1f0f60-e22d-4ff2-b0be-494e0dbae696">Latest voice-agent demo</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 2</p>
+          <h2>Executive Summary</h2>
+        </div>
+        <div class="slide-no">Value</div>
+      </div>
+      <div class="three-col">
+        <div class="panel">
+          <h3>One voice path for browser apps</h3>
+          <p>Any approved browser client can request a short-lived LiveKit session through the browser-session API and connect to a dispatched voice agent.</p>
+        </div>
+        <div class="panel">
+          <h3>Existing agent investments carry over</h3>
+          <p>The voice worker delegates turns into the same chat-pipeline runner, preserving agent configuration, tools, project/artifact context, and prompt behavior.</p>
+        </div>
+        <div class="panel">
+          <h3>Observable and controllable sessions</h3>
+          <p>The API reserves and finalizes sessions, enforces active-session limits, emits BigQuery lifecycle events, and cleans up stale LiveKit dispatches.</p>
+        </div>
+      </div>
+      <div class="callout teal">
+        <strong>Result:</strong> HR interview voice is no longer a bespoke realtime-only implementation. It is a browser-session integration point for configurable chat-pipeline agents and can become a reusable voice surface for other teams.
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 3</p>
+          <h2>End-to-End Architecture</h2>
+        </div>
+        <div class="slide-no">Flow</div>
+      </div>
+      <div class="diagram-shell" aria-label="System design architecture diagram">
+        <svg class="diagram-svg" viewBox="0 0 1240 640" role="img" aria-labelledby="arch-title arch-desc">
+          <title id="arch-title">End-to-end voice agent system design</title>
+          <desc id="arch-desc">Browser requests an HR realtime session, HR calls the browser-session API, the BrowserSession service creates the LiveKit room and dispatch, LiveKit delivers the worker job, and the voice worker delegates to agent_service.</desc>
+
+          <rect class="cluster" x="24" y="40" width="1192" height="155" rx="10"></rect>
+          <text class="cluster-label" x="44" y="68">1. Control setup</text>
+          <rect class="cluster" x="24" y="232" width="1192" height="155" rx="10"></rect>
+          <text class="cluster-label" x="44" y="260">2. Live voice runtime</text>
+          <rect class="cluster" x="24" y="424" width="1192" height="155" rx="10"></rect>
+          <text class="cluster-label" x="44" y="452">3. Event feedback</text>
+
+          <rect class="node" x="70" y="94" width="160" height="64" rx="8"></rect>
+          <text class="title" x="92" y="121">HR browser</text>
+          <text class="small" x="92" y="143">candidate UI</text>
+          <rect class="node api" x="290" y="94" width="170" height="64" rx="8"></rect>
+          <text class="title" x="314" y="121">HR BFF route</text>
+          <text class="small" x="314" y="143">/api/realtime-session</text>
+          <rect class="node api" x="520" y="94" width="190" height="64" rx="8"></rect>
+          <text class="title" x="542" y="121">BrowserSession API</text>
+          <text class="small" x="542" y="143">creates room + dispatch</text>
+          <rect class="node media" x="770" y="94" width="170" height="64" rx="8"></rect>
+          <text class="title" x="794" y="121">LiveKit Cloud</text>
+          <text class="small" x="794" y="143">room + agent queue</text>
+          <rect class="node agent" x="1000" y="94" width="170" height="64" rx="8"></rect>
+          <text class="title" x="1024" y="121">voice_service</text>
+          <text class="small" x="1024" y="143">chat voice worker</text>
+
+          <path class="edge-strong" d="M 230 126 L 290 126"></path>
+          <text class="small" x="237" y="112">session request</text>
+          <path class="edge-strong" d="M 460 126 L 520 126"></path>
+          <text class="small" x="468" y="112">API key call</text>
+          <path class="edge-strong" d="M 710 126 L 770 126"></path>
+          <text class="small" x="720" y="112">API call</text>
+          <path class="edge-media" d="M 940 126 L 1000 126"></path>
+
+          <rect x="330" y="162" width="340" height="48" rx="7" fill="#eef7f5" stroke="#14756f"></rect>
+          <text class="label" x="348" y="181">BrowserSession API returns</text>
+          <text class="small" x="348" y="198">sessionId, token, livekitUrl, roomName, dispatchId</text>
+          <path class="edge-strong" d="M 670 216 L 230 216"></path>
+
+          <rect class="node" x="70" y="286" width="170" height="64" rx="8"></rect>
+          <text class="title" x="94" y="313">LiveKit client</text>
+          <text class="small" x="94" y="335">mic + lk.chat</text>
+          <rect class="node media" x="520" y="286" width="190" height="64" rx="8"></rect>
+          <text class="title" x="542" y="313">LiveKit room</text>
+          <text class="small" x="542" y="335">audio + data topics</text>
+          <rect class="node agent" x="1000" y="286" width="170" height="64" rx="8"></rect>
+          <text class="title" x="1024" y="313">AgentSession</text>
+          <text class="small" x="1024" y="335">STT / TTS / VAD</text>
+          <rect class="node api" x="1000" y="470" width="170" height="64" rx="8"></rect>
+          <text class="title" x="1024" y="497">agent_service</text>
+          <text class="small" x="1024" y="519">runner + tools</text>
+
+          <path class="edge-media" d="M 240 318 L 520 318"></path>
+          <text class="small" x="324" y="302">browser joins with returned token</text>
+          <path class="edge-media" d="M 710 318 L 1000 318"></path>
+          <text class="small" x="790" y="302">agent joins dispatched room</text>
+          <path class="edge-strong" d="M 1085 350 L 1085 470"></path>
+          <text class="small" x="1100" y="414">runner turn</text>
+
+          <rect class="node" x="70" y="470" width="170" height="64" rx="8"></rect>
+          <text class="title" x="94" y="497">HR UI handlers</text>
+          <text class="small" x="94" y="519">transcript + close</text>
+          <rect class="node event" x="520" y="470" width="190" height="64" rx="8"></rect>
+          <text class="title" x="542" y="497">LiveKit topics</text>
+          <text class="small" x="542" y="519">state, transcription, events</text>
+          <path class="edge-event" d="M 1000 502 L 710 502"></path>
+          <text class="small" x="796" y="488">text/tool/error events</text>
+          <path class="edge-event" d="M 520 502 L 240 502"></path>
+          <text class="small" x="316" y="488">render transcript + state</text>
+        </svg>
+        <div class="diagram-legend">
+          <span class="legend-item"><span class="legend-swatch control"></span>Control/API path</span>
+          <span class="legend-item"><span class="legend-swatch media"></span>LiveKit media and dispatch path</span>
+          <span class="legend-item"><span class="legend-swatch event"></span>Browser event path</span>
+          <span class="legend-item"><span class="legend-swatch"></span>Storage/observability side effects</span>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Control plane</h3>
+          <p>The public API authenticates, resolves prompts, reserves sessions, creates LiveKit rooms, dispatches workers, and finalizes sessions.</p>
+        </div>
+        <div class="panel">
+          <h3>Runtime plane</h3>
+          <p>LiveKit carries audio, text streams, transcriptions, agent state, and runner events while the voice worker delegates intelligence to <code>agent_service</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 4</p>
+          <h2>jai-platform/voice_service</h2>
+        </div>
+        <div class="slide-no">Runtime</div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>LiveKit worker responsibilities</h3>
+          <ul>
+            <li>Runs a LiveKit <code>AgentServer</code> entrypoint for the configured voice agent worker name.</li>
+            <li>Parses dispatch metadata into a typed <code>DispatchPayload</code>.</li>
+            <li>Builds STT, TTS, VAD, turn detection, endpointing, and interruption behavior.</li>
+            <li>Starts <code>AgentSession</code> with room IO and handles <code>lk.chat</code> text input.</li>
+            <li>Collects LLM, STT, and TTS usage metrics.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Runner bridge responsibilities</h3>
+          <ul>
+            <li>Creates an <code>agent_service</code> runner from room, org, user, agent, project, artifact, tool, and custom-instruction metadata.</li>
+            <li>Adapts runner event chunks into LiveKit <code>ChatChunk</code> responses for speech output.</li>
+            <li>Publishes structured runner events to <code>jai.agent_events</code>.</li>
+            <li>Persists assistant text, tool calls, tool outputs, errors, and chat history.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Key implementation point:</strong> prewarm initializes the app runner and VAD early, while each LiveKit job creates a room-scoped runner so voice turns execute through the same agent path as chat.
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 5</p>
+          <h2>Why Reuse agent_service Runner</h2>
+        </div>
+        <div class="slide-no">Advantages</div>
+      </div>
+      <div class="four-col">
+        <div class="panel">
+          <h3>Tool parity</h3>
+          <p>Voice sessions can call the tools already configured on the agent instead of defining a separate voice tool registry.</p>
+        </div>
+        <div class="panel">
+          <h3>Prompt parity</h3>
+          <p>Custom instructions, system prompt behavior, and existing chat-pipeline prompt composition are preserved.</p>
+        </div>
+        <div class="panel">
+          <h3>Context parity</h3>
+          <p>Project IDs, artifact IDs, agent labels, orgs, users, and room IDs are passed through a single runner context.</p>
+        </div>
+        <div class="panel">
+          <h3>Event parity</h3>
+          <p>Text chunks, tool calls, tool outputs, and errors follow the same event model and can be forwarded to the browser.</p>
+        </div>
+      </div>
+      <table class="compact-table">
+        <tbody>
+          <tr>
+            <td>Standalone voice stack risk</td>
+            <td>Separate prompts, separate tools, separate event handling, and divergent behavior from chat agents.</td>
+          </tr>
+          <tr>
+            <td>Runner-backed voice path</td>
+            <td>One agent implementation can serve chat and browser voice sessions with consistent capabilities and observability.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 6</p>
+          <h2>japan-ai Browser Sessions</h2>
+        </div>
+        <div class="slide-no">API lifecycle</div>
+      </div>
+      <div class="diagram-shell" aria-label="Browser-session lifecycle sequence diagram">
+        <svg class="diagram-svg" viewBox="0 0 1240 700" role="img" aria-labelledby="session-title session-desc">
+          <title id="session-title">Browser session API lifecycle sequence</title>
+          <desc id="session-desc">Sequence from HR realtime session request through public API reservation, BrowserSession API LiveKit room and dispatch creation, token return, and session finalization.</desc>
+
+          <rect class="node" x="36" y="38" width="140" height="48" rx="8"></rect>
+          <text class="title" x="60" y="67">HR browser</text>
+          <rect class="node api" x="238" y="38" width="160" height="48" rx="8"></rect>
+          <text class="title" x="257" y="67">HR BFF route</text>
+          <rect class="node api" x="468" y="38" width="190" height="48" rx="8"></rect>
+          <text class="title" x="487" y="67">BrowserSession API</text>
+          <rect class="node store" x="722" y="38" width="126" height="48" rx="8"></rect>
+          <text class="title" x="755" y="67">DB</text>
+          <rect class="node media" x="910" y="38" width="126" height="48" rx="8"></rect>
+          <text class="title" x="943" y="67">LiveKit</text>
+          <rect class="node agent" x="1084" y="38" width="114" height="48" rx="8"></rect>
+          <text class="title" x="1104" y="67">Worker</text>
+
+          <line x1="106" y1="86" x2="106" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+          <line x1="318" y1="86" x2="318" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+          <line x1="563" y1="86" x2="563" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+          <line x1="785" y1="86" x2="785" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+          <line x1="973" y1="86" x2="973" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+          <line x1="1141" y1="86" x2="1141" y2="662" stroke="#c9c3b7" stroke-dasharray="4 6"></line>
+
+          <circle cx="106" cy="128" r="14" fill="#14756f"></circle>
+          <text x="102" y="133" fill="#ffffff" font-size="13" font-weight="700">1</text>
+          <path class="edge-strong" d="M 120 128 L 318 128"></path>
+          <rect x="132" y="98" width="160" height="22" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="140" y="114">POST /api/realtime-session</text>
+
+          <circle cx="318" cy="188" r="14" fill="#6b7280"></circle>
+          <text x="314" y="193" fill="#ffffff" font-size="13" font-weight="700">2</text>
+          <path class="edge-dashed" d="M 318 202 L 318 248"></path>
+          <rect x="334" y="208" width="192" height="40" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="344" y="224">resolve prompt server-side:</text>
+          <text class="small" x="344" y="242">position, org, fallback</text>
+
+          <circle cx="318" cy="285" r="14" fill="#14756f"></circle>
+          <text x="314" y="290" fill="#ffffff" font-size="13" font-weight="700">3</text>
+          <path class="edge-strong" d="M 332 285 L 563 285"></path>
+          <rect x="354" y="252" width="178" height="24" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="363" y="269">POST browser-sessions</text>
+
+          <circle cx="563" cy="342" r="14" fill="#14756f"></circle>
+          <text x="559" y="347" fill="#ffffff" font-size="13" font-weight="700">4</text>
+          <path class="edge-strong" d="M 577 342 L 785 342"></path>
+          <rect x="595" y="310" width="160" height="40" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="605" y="326">reserve pending row</text>
+          <text class="small" x="605" y="344">under org lock</text>
+
+          <circle cx="563" cy="410" r="14" fill="#2f5f9b"></circle>
+          <text x="559" y="415" fill="#ffffff" font-size="13" font-weight="700">5</text>
+          <path class="edge-media" d="M 577 410 L 973 410"></path>
+          <rect x="675" y="378" width="212" height="40" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="685" y="394">API calls createRoom(roomName)</text>
+          <text class="small" x="685" y="412">+ createDispatch(roomName, metadata)</text>
+
+          <circle cx="973" cy="468" r="14" fill="#2f5f9b"></circle>
+          <text x="969" y="473" fill="#ffffff" font-size="13" font-weight="700">6</text>
+          <path class="edge-media" d="M 987 468 L 1141 468"></path>
+          <rect x="1016" y="438" width="96" height="22" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="1025" y="454">worker job for roomName</text>
+
+          <path class="edge-strong" d="M 973 510 L 563 510"></path>
+          <circle cx="563" cy="510" r="14" fill="#14756f"></circle>
+          <text x="559" y="515" fill="#ffffff" font-size="13" font-weight="700">7</text>
+          <rect x="650" y="474" width="230" height="48" rx="7" fill="#eef7f5" stroke="#14756f"></rect>
+          <text class="label" x="664" y="494">createDispatch returns</text>
+          <text class="small" x="664" y="512">dispatchId from createDispatch</text>
+
+          <path class="edge-strong" d="M 563 560 L 785 560"></path>
+          <rect x="614" y="526" width="120" height="24" rx="4" fill="#fffdf8"></rect>
+          <text class="small" x="624" y="543">confirm DB row</text>
+
+          <rect x="350" y="558" width="330" height="48" rx="7" fill="#eef7f5" stroke="#14756f"></rect>
+          <text class="label" x="379" y="578">BrowserSession API returns</text>
+          <text class="small" x="379" y="596">sessionId, token, livekitUrl, roomName, dispatchId</text>
+          <path class="edge-strong" d="M 563 612 L 318 612"></path>
+          <circle cx="563" cy="612" r="14" fill="#14756f"></circle>
+          <text x="559" y="617" fill="#ffffff" font-size="13" font-weight="700">8</text>
+
+          <rect x="126" y="608" width="176" height="36" rx="7" fill="#eef7f5" stroke="#14756f"></rect>
+          <text class="label" x="138" y="630">HR forwards response</text>
+          <path class="edge-strong" d="M 318 656 L 106 656"></path>
+        </svg>
+        <div class="diagram-legend">
+          <span class="legend-item"><span class="legend-swatch control"></span>Synchronous API work</span>
+          <span class="legend-item"><span class="legend-swatch media"></span>LiveKit room and worker job delivery</span>
+          <span class="legend-item"><span class="legend-swatch"></span>DB reservation and confirmation</span>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Operational controls</h3>
+          <p>Application API key auth, Zod validation, active-session quota, stale-session cutoff, and per-org advisory locking protect room creation.</p>
+        </div>
+        <div class="panel">
+          <h3>Cleanup path</h3>
+          <p><code>DELETE</code>, create-failure cleanup, and the reaper finalize rows and best-effort remove LiveKit dispatches while logging start/end events.</p>
+        </div>
+      </div>
+      <div class="callout teal">
+        BigQuery start/end events include session, application, API key, agent, room, dispatch, participant, and duration details for operational visibility.
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 7</p>
+          <h2>Public Browser-Session Interface</h2>
+        </div>
+        <div class="slide-no">Contract</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST /voice-agent/v1/browser-sessions</code></td>
+            <td>Creates a tracked LiveKit browser session. Requires application API key. Important fields: <code>agentId</code>, optional <code>prompt</code>, optional <code>userId</code>, <code>language</code>, <code>projectId</code>, <code>artifactIds</code>, and <code>participantName</code>.</td>
+          </tr>
+          <tr>
+            <td>POST response</td>
+            <td><code>sessionId</code>, <code>token</code>, <code>livekitUrl</code>, generated <code>roomName</code>, and LiveKit <code>dispatchId</code> returned from <code>createDispatch</code>.</td>
+          </tr>
+          <tr>
+            <td><code>DELETE /voice-agent/v1/browser-sessions/:id</code></td>
+            <td>Finalizes the tracked browser session, records end time and duration, and performs best-effort LiveKit dispatch teardown.</td>
+          </tr>
+          <tr>
+            <td>Throttling and quota</td>
+            <td>The service enforces an active browser-session limit per org and treats sessions older than the max duration as stale.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="footer-note">For <code>chat_pipeline</code>, <code>prompt</code> is forwarded as <code>custom_instruction</code>. For legacy realtime or pipeline voice configs, prompt remains required.</p>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 8</p>
+          <h2>Chat-Pipeline Dispatch Metadata</h2>
+        </div>
+        <div class="slide-no">LiveKit</div>
+      </div>
+      <p class="lead">The browser-session API dispatches the chat voice worker with metadata that gives the voice worker everything it needs to reconstruct the chat-pipeline runner context, including the LiveKit room details.</p>
+      <div class="diagram-shell" aria-label="Metadata propagation diagram">
+        <svg class="diagram-svg" viewBox="0 0 1040 330" role="img" aria-labelledby="metadata-title metadata-desc">
+          <title id="metadata-title">Chat-pipeline metadata propagation</title>
+          <desc id="metadata-desc">Client request fields are handled by BrowserSession API, normalized into LiveKit dispatch metadata, parsed by voice_service, and converted into agent_service runner context.</desc>
+
+          <rect class="node" x="30" y="58" width="210" height="180" rx="10"></rect>
+          <text class="cluster-label" x="52" y="86">HR/browser client</text>
+          <text class="small" x="52" y="118">POST browser-session</text>
+          <text class="small" x="52" y="143">agentId, prompt, userId</text>
+          <text class="small" x="52" y="168">language, projectId</text>
+          <text class="small" x="52" y="193">artifactIds, participantName</text>
+
+          <rect class="node api" x="295" y="58" width="210" height="180" rx="10"></rect>
+          <text class="cluster-label" x="317" y="86">BrowserSession API</text>
+          <text class="small" x="317" y="118">resolve agent config</text>
+          <text class="small" x="317" y="143">resolve subject user</text>
+          <text class="small" x="317" y="168">generate roomName</text>
+          <text class="small" x="317" y="193">map prompt to custom_instruction</text>
+
+          <rect class="node media" x="560" y="58" width="210" height="180" rx="10"></rect>
+          <text class="cluster-label" x="582" y="86">LiveKit dispatch metadata</text>
+          <text class="small" x="582" y="118">org/application/user</text>
+          <text class="small" x="582" y="143">agent + tools</text>
+          <text class="small" x="582" y="168">project/artifacts</text>
+          <text class="small" x="582" y="193">room_id = roomName</text>
+
+          <rect class="node agent" x="825" y="58" width="190" height="180" rx="10"></rect>
+          <text class="cluster-label" x="847" y="86">voice_service</text>
+          <text class="small" x="847" y="118">DispatchPayload</text>
+          <text class="small" x="847" y="143">create_runner()</text>
+          <text class="small" x="847" y="168">AppContext</text>
+          <text class="small" x="847" y="193">agent_service runner</text>
+
+          <path class="edge-strong" d="M 240 148 L 295 148"></path>
+          <text class="small" x="246" y="132">request payload</text>
+          <path class="edge-strong" d="M 505 148 L 560 148"></path>
+          <text class="small" x="516" y="132">createDispatch(roomName)</text>
+          <path class="edge-media" d="M 770 148 L 825 148"></path>
+          <text class="small" x="782" y="132">job</text>
+          <path class="edge-event" d="M 920 238 C 920 295 130 295 130 238"></path>
+          <text class="small" x="395" y="289">runner events return to browser as LiveKit data/transcription/audio</text>
+        </svg>
+      </div>
+      <div class="panel">
+        <span class="tag">org_id</span>
+        <span class="tag">application_id</span>
+        <span class="tag">user_id</span>
+        <span class="tag">agent_id</span>
+        <span class="tag">agent_label</span>
+        <span class="tag">agent_tools</span>
+        <span class="tag">project_id</span>
+        <span class="tag">artifact_ids</span>
+        <span class="tag">room_id</span>
+        <span class="tag">language</span>
+        <span class="tag">custom_instruction</span>
+        <span class="tag">tts</span>
+        <span class="tag">tts_provider</span>
+        <span class="tag">voice_id</span>
+        <span class="tag">stt_id</span>
+        <span class="tag">stt_language</span>
+        <span class="tag">allow_interruption</span>
+        <span class="tag">eagerness</span>
+      </div>
+      <div class="callout teal">
+        <strong>Room handoff:</strong> browser-session generates <code>roomName</code>, calls LiveKit <code>createRoom(roomName)</code>, then calls <code>createDispatch(roomName, ...)</code>, which returns <code>dispatchId</code>. The API returns both <code>roomName</code> and <code>dispatchId</code> to HR/browser, and sends the same room value in dispatch metadata as <code>room_id</code>. The browser joins with the returned token and room details; the agent worker receives the LiveKit job for that room and starts <code>AgentSession</code> with <code>ctx.room</code>.
+      </div>
+      <div class="two-col" style="margin-top: 18px;">
+        <div class="panel">
+          <h3>Legacy realtime/pipeline</h3>
+          <p>Dispatches the older LiveKit agent path and requires a prompt for session creation.</p>
+        </div>
+        <div class="panel">
+          <h3>New chat_pipeline</h3>
+          <p>Dispatches <code>jai-chat-voice-agent-{env}</code>, forwards the agent tool list, and maps the browser-session prompt to runner <code>custom_instruction</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 9</p>
+          <h2>Schema and UI Enablement</h2>
+        </div>
+        <div class="slide-no">Config</div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Agent schema</h3>
+          <ul>
+            <li>Adds <code>chat_pipeline</code> voice-call config.</li>
+            <li>Supports chat TTS provider and voice selection across Deepgram, OpenAI, and ElevenLabs.</li>
+            <li>Supports STT model, STT language, interruption, and eagerness endpointing metadata.</li>
+            <li>Normalizes provider-specific TTS payloads before dispatch.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Admin and client UI</h3>
+          <ul>
+            <li>Admin schema validation accepts valid chat-pipeline config and rejects unsupported TTS config.</li>
+            <li>Client settings expose pipeline type, TTS provider, voice, STT, language, eagerness, and interruption settings.</li>
+            <li>Teams can configure agents through normal settings UI instead of bespoke HR-only code.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        This is the productization step: browser-session voice agents become configurable platform capability, not a one-off integration.
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 10</p>
+          <h2>HR Interview Integration</h2>
+        </div>
+        <div class="slide-no">Prompt and session</div>
+      </div>
+      <div class="sequence">
+        <div class="step"><strong>Candidate page requests session.</strong> HR calls its own <code>/api/realtime-session</code>, protected by a capability ticket with <code>session</code> scope.</div>
+        <div class="step"><strong>Prompt is resolved server-side.</strong> Position prompt is preferred, then org prompt, then fallback default prompt.</div>
+        <div class="step"><strong>Prompt file content is forwarded whole.</strong> HR downloads prompt content via PRS storage proxy and sends it as browser-session <code>prompt</code>.</div>
+        <div class="step"><strong>Public API maps prompt to voice context.</strong> For chat-pipeline agents, that prompt becomes LiveKit metadata <code>custom_instruction</code>.</div>
+        <div class="step"><strong>Browser receives only session details.</strong> The response includes token, URL, room/session identifiers, and a coarse prompt-source label, not the prompt content.</div>
+      </div>
+      <table class="compact-table">
+        <tbody>
+          <tr>
+            <td>Required HR env</td>
+            <td><code>JAPAN_AI_VOICE_API_URL</code>, <code>JAPAN_AI_VOICE_API_KEY</code>, <code>JAPAN_AI_VOICE_AGENT_ID</code>, <code>JAPAN_AI_VOICE_USER_ID</code></td>
+          </tr>
+          <tr>
+            <td>Optional HR env</td>
+            <td>Voice language and artifact IDs; prompts are read through the PRS storage proxy.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 11</p>
+          <h2>HR LiveKit Client Behavior</h2>
+        </div>
+        <div class="slide-no">Browser</div>
+      </div>
+      <div class="diagram-shell" aria-label="HR browser event topology diagram">
+        <svg class="diagram-svg" viewBox="0 0 1040 300" role="img" aria-labelledby="events-title events-desc">
+          <title id="events-title">LiveKit event topology in the HR browser</title>
+          <desc id="events-desc">voice_service publishes audio, transcription, state, and runner events into the LiveKit room. LiveKit sends those events to the HR browser, where the UI parses them into transcript, avatar, microphone, and completion state.</desc>
+
+          <rect class="node agent" x="40" y="70" width="240" height="130" rx="10"></rect>
+          <text class="cluster-label" x="62" y="98">voice_service</text>
+          <text class="title" x="62" y="126">Publishes into room</text>
+          <text class="small" x="62" y="151">agent audio</text>
+          <text class="small" x="62" y="171">transcription segments</text>
+          <text class="small" x="62" y="191">state + jai.agent_events</text>
+
+          <rect class="node media" x="400" y="70" width="240" height="130" rx="10"></rect>
+          <text class="cluster-label" x="422" y="98">LiveKit room</text>
+          <text class="title" x="422" y="126">Sends to browser</text>
+          <text class="small" x="422" y="151">audio tracks</text>
+          <text class="small" x="422" y="171">lk.transcription</text>
+          <text class="small" x="422" y="191">lk.agent.state + jai.agent_events</text>
+
+          <rect class="node" x="760" y="70" width="240" height="130" rx="10"></rect>
+          <text class="cluster-label" x="782" y="98">HR browser</text>
+          <text class="title" x="782" y="126">Parses UI state</text>
+          <text class="small" x="782" y="151">transcript panel</text>
+          <text class="small" x="782" y="171">avatar + microphone state</text>
+          <text class="small" x="782" y="191">tool result closes interview</text>
+
+          <path class="edge-event" d="M 280 135 L 400 135"></path>
+          <text class="small" x="304" y="118">publish</text>
+          <path class="edge-event" d="M 640 135 L 760 135"></path>
+          <text class="small" x="664" y="118">deliver</text>
+
+          <rect class="event" x="252" y="232" width="536" height="38" rx="8"></rect>
+          <text class="label" x="276" y="256">Browser receives events from LiveKit, not by calling voice_service directly.</text>
+        </svg>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Connection and turn control</h3>
+          <ul>
+            <li>Connects to LiveKit with the browser-session token and URL.</li>
+            <li>Publishes the candidate microphone muted at first.</li>
+            <li>Waits for the agent participant to join.</li>
+            <li>Sends the first <code>lk.chat</code> text message to trigger the opening statement.</li>
+            <li>Uses agent state to decide when the candidate can speak.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Events parsed by HR</h3>
+          <ul>
+            <li><code>lk.transcription</code> updates user and agent transcript segments.</li>
+            <li><code>lk.agent.state</code> drives listening, thinking, speaking, avatar, and mic state.</li>
+            <li><code>jai.agent_events</code> carries runner text, tool calls, tool outputs, and errors.</li>
+            <li>LiveKit audio tracks drive candidate playback, agent speaking state, and lip-sync behavior.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout teal">
+        The first text message is deliberate: HR asks the agent to use <code>&lt;OpeningStatement&gt;</code> when present, then proceeds with normal voice interaction.
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <div>
+          <p class="eyebrow">Slide 12</p>
+          <h2>Tool Handling, PRs, and Future Work</h2>
+        </div>
+        <div class="slide-no">Status</div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Tool handling</h3>
+          <ul>
+            <li>Tools configured on the agent are forwarded through <code>agent_tools</code>.</li>
+            <li>The voice worker forwards runner tool-call and tool-output events to <code>jai.agent_events</code>.</li>
+            <li>HR monitors <code>tool_calling</code> and <code>tool_result</code> payloads.</li>
+            <li>HR detects the <code>end_interview</code> workflow result and closes after the agent finishes speaking.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Confirmed PRs and deployment</h3>
+          <ul>
+            <li><a href="https://github.com/japan-ai-inc/jai-platform/pull/3320">jai-platform#3320</a>: OpenAI TTS response format fix for the chat-pipeline voice service branch.</li>
+            <li><a href="https://github.com/japan-ai-inc/japan-ai/pull/12885">japan-ai#12885</a>: chat-pipeline browser-session voice support.</li>
+            <li>HR PR link omitted because no confirmed PR was found; HR evidence is branch/file based.</li>
+            <li>UI version is deployed on Shreyansh's personal env: <a href="https://shreyansh.dev.app.japan-ai.co.jp">shreyansh.dev.app.japan-ai.co.jp</a>.</li>
+            <li>AI Interviewer demo using the latest voice agents: <a class="link-break" href="https://page-rendering-service-prod-1082764892911.asia-northeast1.run.app/app/562bd4ba-a3a3-4e3f-89d0-c24900429076/b0e1d88c-ea16-423b-b66e-92eb07c24c3a/9e893317-b8ac-4d62-85cf-71c41a339515/ai-interviewer?token=ab1f0f60-e22d-4ff2-b0be-494e0dbae696">page-rendering-service demo link</a>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout red">
+        <strong>Future work:</strong> the next step is integrating conversation flows into this browser-session and chat-pipeline voice-agent path, so structured conversation design can drive browser voice sessions end to end.
+      </div>
+      <p class="evidence">Evidence surfaces reviewed: <code>jai-platform/voice_service</code>, <code>japan-ai</code> browser-session/API/schema/UI changes, and <code>studio-projects/hr/jai_hr_interview_page</code>.</p>
+    </section>
+  </main>
+</body>
+</html>
