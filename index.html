@@ -687,16 +687,16 @@
         <div class="slide-no">Flow</div>
       </div>
       <div class="diagram-shell" aria-label="System design architecture diagram">
-        <svg class="diagram-svg" viewBox="0 0 1240 640" role="img" aria-labelledby="arch-title arch-desc">
+        <svg class="diagram-svg" viewBox="0 0 1240 720" role="img" aria-labelledby="arch-title arch-desc">
           <title id="arch-title">End-to-end voice agent system design</title>
-          <desc id="arch-desc">Browser requests an HR realtime session, HR calls the browser-session API, the BrowserSession service creates the LiveKit room and dispatch, LiveKit delivers the worker job, and the voice worker delegates to agent_service.</desc>
+          <desc id="arch-desc">Browser requests an HR realtime session, BrowserSession API creates the LiveKit room and dispatch, voice_service joins the room, agent_service streams text and tool events, voice_service converts them into LiveKit audio and data topics, and LiveKit forwards them to the browser.</desc>
 
           <rect class="cluster" x="24" y="40" width="1192" height="155" rx="10"></rect>
           <text class="cluster-label" x="44" y="68">1. Control setup</text>
-          <rect class="cluster" x="24" y="232" width="1192" height="155" rx="10"></rect>
+          <rect class="cluster" x="24" y="225" width="1192" height="180" rx="10"></rect>
           <text class="cluster-label" x="44" y="260">2. Live voice runtime</text>
-          <rect class="cluster" x="24" y="424" width="1192" height="155" rx="10"></rect>
-          <text class="cluster-label" x="44" y="452">3. Event feedback</text>
+          <rect class="cluster" x="24" y="435" width="1192" height="220" rx="10"></rect>
+          <text class="cluster-label" x="44" y="463">3. Streaming output and browser feedback</text>
 
           <rect class="node" x="70" y="94" width="160" height="64" rx="8"></rect>
           <text class="title" x="92" y="121">HR browser</text>
@@ -727,36 +727,62 @@
           <text class="small" x="348" y="198">sessionId, token, livekitUrl, roomName, dispatchId</text>
           <path class="edge-strong" d="M 670 216 L 230 216"></path>
 
-          <rect class="node" x="70" y="286" width="170" height="64" rx="8"></rect>
+          <rect class="node" x="60" y="290" width="150" height="64" rx="8"></rect>
           <text class="title" x="94" y="313">LiveKit client</text>
           <text class="small" x="94" y="335">mic + lk.chat</text>
-          <rect class="node media" x="520" y="286" width="190" height="64" rx="8"></rect>
-          <text class="title" x="542" y="313">LiveKit room</text>
-          <text class="small" x="542" y="335">audio + data topics</text>
-          <rect class="node agent" x="1000" y="286" width="170" height="64" rx="8"></rect>
-          <text class="title" x="1024" y="313">AgentSession</text>
-          <text class="small" x="1024" y="335">STT / TTS / VAD</text>
-          <rect class="node api" x="1000" y="470" width="170" height="64" rx="8"></rect>
-          <text class="title" x="1024" y="497">agent_service</text>
-          <text class="small" x="1024" y="519">runner + tools</text>
+          <rect class="node media" x="285" y="290" width="150" height="64" rx="8"></rect>
+          <text class="title" x="308" y="313">LiveKit room</text>
+          <text class="small" x="308" y="335">shared session</text>
+          <rect class="node agent" x="510" y="290" width="165" height="64" rx="8"></rect>
+          <text class="title" x="530" y="313">AgentSession</text>
+          <text class="small" x="530" y="335">STT / TTS / VAD</text>
+          <rect class="node agent" x="750" y="290" width="185" height="64" rx="8"></rect>
+          <text class="title" x="770" y="313">AgentServiceLLM</text>
+          <text class="small" x="770" y="335">event adapter</text>
+          <rect class="node api" x="1010" y="290" width="170" height="64" rx="8"></rect>
+          <text class="title" x="1030" y="313">agent_service</text>
+          <text class="small" x="1030" y="335">runner + tools</text>
 
-          <path class="edge-media" d="M 240 318 L 520 318"></path>
-          <text class="small" x="324" y="302">browser joins with returned token</text>
-          <path class="edge-media" d="M 710 318 L 1000 318"></path>
-          <text class="small" x="790" y="302">agent joins dispatched room</text>
-          <path class="edge-strong" d="M 1085 350 L 1085 470"></path>
-          <text class="small" x="1100" y="414">runner turn</text>
+          <path class="edge-media" d="M 210 322 L 285 322"></path>
+          <text class="small" x="222" y="307">joins</text>
+          <path class="edge-media" d="M 435 322 L 510 322"></path>
+          <text class="small" x="448" y="307">room IO</text>
+          <path class="edge-strong" d="M 675 322 L 750 322"></path>
+          <text class="small" x="690" y="307">LLM stream</text>
+          <path class="edge-strong" d="M 935 322 L 1010 322"></path>
+          <text class="small" x="950" y="307">runner turn</text>
 
-          <rect class="node" x="70" y="470" width="170" height="64" rx="8"></rect>
-          <text class="title" x="94" y="497">HR UI handlers</text>
-          <text class="small" x="94" y="519">transcript + close</text>
-          <rect class="node event" x="520" y="470" width="190" height="64" rx="8"></rect>
-          <text class="title" x="542" y="497">LiveKit topics</text>
-          <text class="small" x="542" y="519">state, transcription, events</text>
-          <path class="edge-event" d="M 1000 502 L 710 502"></path>
-          <text class="small" x="796" y="488">text/tool/error events</text>
-          <path class="edge-event" d="M 520 502 L 240 502"></path>
-          <text class="small" x="316" y="488">render transcript + state</text>
+          <rect class="node api" x="1010" y="492" width="170" height="80" rx="8"></rect>
+          <text class="title" x="1030" y="518">runner stream</text>
+          <text class="small" x="1030" y="540">text chunks</text>
+          <text class="small" x="1030" y="560">tool call/output</text>
+          <rect class="node agent" x="750" y="492" width="185" height="80" rx="8"></rect>
+          <text class="title" x="770" y="518">adapter parses</text>
+          <text class="small" x="770" y="540">delta.content</text>
+          <text class="small" x="770" y="560">extra.sse_payload</text>
+          <rect class="node agent" x="510" y="492" width="165" height="80" rx="8"></rect>
+          <text class="title" x="530" y="518">AgentSession</text>
+          <text class="small" x="530" y="540">TTS audio output</text>
+          <text class="small" x="530" y="560">publish_data()</text>
+          <rect class="node event" x="285" y="492" width="150" height="80" rx="8"></rect>
+          <text class="title" x="307" y="518">LiveKit room</text>
+          <text class="small" x="307" y="540">audio tracks</text>
+          <text class="small" x="307" y="560">jai.agent_events</text>
+          <rect class="node" x="60" y="492" width="150" height="80" rx="8"></rect>
+          <text class="title" x="82" y="518">HR browser</text>
+          <text class="small" x="82" y="540">transcript</text>
+          <text class="small" x="82" y="560">tool events + UI</text>
+
+          <path class="edge-event" d="M 1010 532 L 935 532"></path>
+          <text class="small" x="946" y="516">stream</text>
+          <path class="edge-event" d="M 750 532 L 675 532"></path>
+          <text class="small" x="684" y="516">ChatChunk</text>
+          <path class="edge-media" d="M 510 520 L 435 520"></path>
+          <text class="small" x="444" y="504">audio</text>
+          <path class="edge-event" d="M 510 555 L 435 555"></path>
+          <text class="small" x="444" y="585">data topic</text>
+          <path class="edge-event" d="M 285 532 L 210 532"></path>
+          <text class="small" x="220" y="516">forward</text>
         </svg>
         <div class="diagram-legend">
           <span class="legend-item"><span class="legend-swatch control"></span>Control/API path</span>
@@ -771,8 +797,8 @@
           <p>The public API authenticates, resolves prompts, reserves sessions, creates LiveKit rooms, dispatches workers, and finalizes sessions.</p>
         </div>
         <div class="panel">
-          <h3>Runtime plane</h3>
-          <p>LiveKit carries audio, text streams, transcriptions, agent state, and runner events while the voice worker delegates intelligence to <code>agent_service</code>.</p>
+          <h3>Streaming output plane</h3>
+          <p><code>agent_service</code> streams text and tool events. <code>voice_service</code> maps text into <code>ChatChunk.delta.content</code> for LiveKit TTS audio, and maps structured payloads into <code>jai.agent_events</code> for browser data events.</p>
         </div>
       </div>
     </section>
